@@ -1,26 +1,16 @@
 ---
 import Card from "./Card.astro";
+import { courses } from "../../data/courses";
 ---
 
 <section
   class="max-w-screen-xl mx-auto p-4"
 >
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-center justify-center">
-    <Card
-      title="Marketing y gestión de negocios digitales"
-      description="Arma tu modelo de negocios anunciando tu propio producto encontrando un lugar en el mercado"
-    />
-    <Card
-      title="Marketing y gestión de negocios digitales"
-      description="Arma tu modelo de negocios anunciando tu propio producto encontrando un lugar en el mercado"
-    />
-    <Card
-      title="Marketing y gestión de negocios digitales"
-      description="Arma tu modelo de negocios anunciando tu propio producto encontrando un lugar en el mercado"
-    />
-    <Card
-      title="Marketing y gestión de negocios digitales"
-      description="Arma tu modelo de negocios anunciando tu propio producto encontrando un lugar en el mercado"
-    />
+    {courses.map((course) => (
+      <Card
+        course={course}
+      />
+    ))}
   </div>
 </section>
