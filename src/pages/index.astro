@@ -1,10 +1,47 @@
 ---
-import CoursesSection from '../components/courses/CoursesSection.astro';
-import SearchSection from '../components/search/SearchSection.astro';
-import Layout from '../layouts/Layout.astro';
+import SIASection from "../components/sia/SIASection.astro";
+import SearchSection from "../components/search/SearchSection.astro";
+import Tabs from "../components/Tabs.astro";
+import Layout from "../layouts/Layout.astro";
+import CourseraSection from "../components/coursera/CourseraSection.astro";
+import ClubsSection from "../components/clubs/ClubsSection.astro";
 ---
 
 <Layout>
-	<SearchSection/>
-	<CoursesSection/>
+  <SearchSection />
+  <Tabs />
+  <div id="default-styled-tab-content">
+    <div
+      class="hidden bg-gray-50 dark:bg-gray-800"
+      id="styled-profile"
+      role="tabpanel"
+      aria-labelledby="profile-tab"
+    >
+      <SIASection />
+    </div>
+    <div
+      class="hidden bg-gray-50 dark:bg-gray-800"
+      id="styled-dashboard"
+      role="tabpanel"
+      aria-labelledby="dashboard-tab"
+    >
+      <CourseraSection />
+    </div>
+    <div
+      class="hidden bg-gray-50 dark:bg-gray-800"
+      id="styled-settings"
+      role="tabpanel"
+      aria-labelledby="settings-tab"
+    >
+      <ClubsSection />
+    </div>
+    <div
+      class="hidden bg-gray-50 dark:bg-gray-800"
+      id="styled-contacts"
+      role="tabpanel"
+      aria-labelledby="contacts-tab"
+    >
+      <SIASection />
+    </div>
+  </div>
 </Layout>

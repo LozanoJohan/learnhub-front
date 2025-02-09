@@ -1,11 +1,12 @@
 ---
-import AddReviewModal from "../components/AddReviewModal.astro";
-import RelatedCourses from "../components/RelatedCourses.astro";
-import Reviews from "../components/Reviews.astro";
-import ReviewsDisplay from "../components/ReviewsDisplay.astro";
-import { courses } from "../data/courses";
-import Layout from "../layouts/Layout.astro";
-import type { Course } from "../models/course";
+import RelatedCourses from '../../components/sia/RelatedCourses.astro';
+import AddReviewModal from '../../components/sia/reviews/AddReviewModal.astro';
+import Reviews from '../../components/sia/reviews/Reviews.astro';
+import ReviewsDisplay from '../../components/sia/reviews/ReviewsDisplay.astro';
+import { courses } from '../../data/siaCourses';
+import Layout from '../../layouts/Layout.astro';
+import type { SIACourse } from '../../models/courses';
+
 
 interface Props {
   courseCode: string;
@@ -13,8 +14,8 @@ interface Props {
 
 const { courseCode } = Astro.params;
 
-const course: Course = courses.filter(
-  (course) => course.code === courseCode
+const course: SIACourse = courses.filter(
+  (course) => course.id === courseCode
 )[0];
 
 console.log(Astro.params);
@@ -40,7 +41,7 @@ console.log(Astro.params);
             >
               <div>
                 <p class="pt-2 font-semibold text-gray-900 dark:text-white">
-                  {course.code}
+                  {course.id}
                 </p>
               </div>
             </div>

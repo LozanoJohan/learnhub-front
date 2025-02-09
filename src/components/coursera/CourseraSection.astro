@@ -1,6 +1,8 @@
 ---
-import Card from "./Card.astro";
-import { courses } from "../../data/courses";
+import CourseraCard from "./CourseraCard.astro";
+import { courses } from "../../data/courseraCourses";
+
+
 ---
 
 <section
@@ -8,7 +10,7 @@ import { courses } from "../../data/courses";
 >
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-center justify-center">
     {courses.map((course) => (
-      <Card
+      <CourseraCard
         course={course}
       />
     ))}
