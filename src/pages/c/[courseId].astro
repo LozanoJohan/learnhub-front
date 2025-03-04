@@ -1,0 +1,107 @@
+import { getCourseraCourses } from '../../services/courseraService';
+import Layout from '../../layouts/Layout.astro';
+import type { CourseraCourse } from '../../models/courses';
+
+interface Props {
+  courseId: string;
+}
+
+const { courseId } = Astro.params;
+
+// Obtener el curso de Coursera del mock
+const coursesData = await getCourseraCourses();
+const course = coursesData.find((c) => c.id === courseId);
+
+if (!course) {
+  return Astro.redirect('/404');
+}
+
+console.log("Curso de Coursera encontrado:", course);
+
+<Layout>
+  <main class="pt-8 lg:pt-16 bg-white dark:bg-gray-900 antialiased">
+    <div class="flex justify-between px-4 mx-auto max-w-screen-xl">
+      <article
+        class="mx-auto w-full max-w-screen-xl format format-sm sm:format-base lg:format-lg format-blue dark:format-invert"
+      >
+        <header class="mb-4 lg:mb-6 not-format">
+          <h1
+            class="mb-4 text-3xl font-extrabold leading-tight text-gray-900 lg:mb-6 lg:text-4xl dark:text-white"
+          >
+            {course.title}
+          </h1>
+          
+          <div class="flex items-center mb-6 not-italic">
+            <div
+              class="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white"
+            >
+              <div>
+                <p class="pt-2 font-semibold text-gray-900 dark:text-white">
+                  Profesor: {course.professor || 'No especificado'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Habilidades que aprenderás</h2>
+            <p class="lead mb-4">
+              {course.skills}
+            </p>
+            
+            {course.description && (
+              <div class="mt-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Descripción</h2>
+                <p class="lead mb-4">
+                  {course.description}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Información del curso</h2>
+            
+            <div class="mb-4">
+              <p class="text-lg font-medium text-gray-900 dark:text-white">Calificación: <span class="font-normal">{course.score} ⭐</span></p>
+            </div>
+            
+            <div class="mb-4">
+              <p class="text-lg font-medium text-gray-900 dark:text-white">Reseñas: <span class="font-normal">{course.reviews}</span></p>
+            </div>
+            
+            {course.difficulty && (
+              <div class="mb-4">
+                <p class="text-lg font-medium text-gray-900 dark:text-white">Dificultad: <span class="font-normal">{course.difficulty}</span></p>
+              </div>
+            )}
+            
+            <div class="mt-6">
+              <a href={course.url || `https://www.coursera.org/programs/coursera-para-la-universidad-nacional-de-colombia-ji3sj/browse?query=${encodeURIComponent(course.title)}`} 
+                 target="_blank" 
+                 class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 flex items-center justify-center">
+                Ver en Coursera
+                <svg 
+                  class="w-4 h-4 ml-2" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  ></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+</Layout> 

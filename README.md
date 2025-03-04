@@ -46,3 +46,39 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+
+# Buscador Unificado con Búsqueda Vectorial
+
+Este proyecto proporciona una interfaz para buscar cursos y clubes de la Universidad Nacional de Colombia.
+
+## 🚀 Características
+
+- **Búsqueda vectorial de cursos SIA**: Utiliza búsqueda semántica para encontrar cursos basados en significado, no solo palabras clave.
+- **Visualización de clubes universitarios**: Explora los clubes disponibles en la universidad.
+- **Integración con Coursera**: Encuentra cursos relacionados en la plataforma Coursera.
+
+## 💡 Búsqueda Vectorial
+
+La aplicación utiliza exclusivamente búsqueda vectorial para los cursos del SIA, lo que permite:
+
+- Encontrar cursos relacionados semánticamente con tu consulta
+- Descubrir cursos por concepto, no solo por palabras exactas
+- Ver resultados ordenados por relevancia con respecto a tu búsqueda
+- Visualizar cursos relacionados a un curso específico
+
+## 🧞 Comandos
+
+Todos los comandos se ejecutan desde la raíz del proyecto, en una terminal:
+
+| Comando                   | Acción                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Instala dependencias                             |
+| `npm run dev`             | Inicia servidor local en `localhost:4321`        |
+| `npm run build`           | Compila el sitio para producción en `./dist/`    |
+| `npm run preview`         | Vista previa de la compilación antes de desplegar|
+
+## 🔄 Integración con el Backend
+
+Esta aplicación frontend se conecta con un servidor backend para realizar búsquedas vectoriales. Asegúrate de que el backend esté en funcionamiento en `http://localhost:8001` antes de iniciar la aplicación frontend.
+
+Consulta el README del proyecto backend para más información sobre la implementación de la búsqueda vectorial.

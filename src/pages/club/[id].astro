@@ -1,19 +1,75 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Chat from '../../components/Chat';
+import ClubChat from '../../components/chat/ClubChat';
 import { onRequest } from '../../middleware/auth';
+import { getClubById } from '../../services/clubService';
 
 export { onRequest };
 
 const { id } = Astro.params;
 const userEmail = Astro.cookies.get('userEmail')?.value || 'Usuario';
+
+// Obtener información del club
+let club = null;
+if (id) {
+  try {
+    club = await getClubById(id);
+    if (!club) {
+      return Astro.redirect('/404');
+    }
+  } catch (error) {
+    console.error("Error al obtener información del club:", error);
+    return Astro.redirect('/404');
+  }
+}
+
+// Asegurarnos de que el id nunca sea undefined para el componente
+const clubId = id || "";
+const clubName = club?.nombre || "Club";
 ---
 
-<Layout title="Chat del Club">
+<Layout title={`${clubName} - Club`}>
   <main class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8">Chat del Club</h1>
+    <div class="flex flex-col md:flex-row md:items-center mb-8 gap-4">
+      <a href="/search?tab=clubs" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Volver a la búsqueda
+      </a>
+      <h1 class="text-3xl font-bold">{clubName}</h1>
+    </div>
+    
+    {club && (
+      <div class="mb-8 max-w-4xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div class="md:flex">
+            <div class="md:flex-shrink-0">
+              <img class="h-48 w-full object-cover md:h-full md:w-64" src="https://via.placeholder.com/400x200" alt={club.nombre} />
+            </div>
+            <div class="p-8">
+              <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{club.area}</div>
+              <h1 class="block mt-1 text-lg leading-tight font-medium text-black dark:text-white">{club.nombre}</h1>
+              <p class="mt-2 text-gray-600 dark:text-gray-300">{club.descripcion}</p>
+              <div class="mt-4 flex items-center">
+                <span class="text-gray-600 dark:text-gray-400">{club.currentSize}/{club.capacity} miembros</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div class="max-w-4xl mx-auto">
-      <Chat client:load channelId={id} />
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-8">
+        <h2 class="text-2xl font-bold mb-4">Canal de chat</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+          Utiliza este canal para comunicarte con otros miembros del club. Aquí puedes hacer preguntas, compartir recursos y organizar actividades.
+        </p>
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg">
+          <ClubChat client:load clubId={clubId} clubName={clubName} />
+        </div>
+      </div>
     </div>
   </main>
 </Layout> 

@@ -70,6 +70,7 @@ export async function getClubs(query: string): Promise<Club[]> {
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
+            'No-Access-Control-Allow-Origin': '*',
             'Accept': 'application/json'
         };
 
@@ -96,5 +97,51 @@ export async function getClubs(query: string): Promise<Club[]> {
     } catch (error) {
         console.error('Error fetching clubs:', error);
         return [];
+    }
+}
+
+export async function getClubById(id: string): Promise<Club | null> {
+    try {
+        // Intentar obtener el token de autenticación
+        const token = await getAuthToken();
+
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'No-Access-Control-Allow-Origin': '*',
+            'Accept': 'application/json'
+        };
+
+        // Agregar el token a los headers si está disponible
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/canales/${id}`, {
+            method: 'GET',
+            headers,
+            credentials: 'include',
+            mode: 'cors'
+        });
+
+        if (!response.ok) {
+            // Si el club no se encuentra, revisamos si está en los datos mock
+            if (response.status === 404) {
+                const mockClub = mockClubs.find(club => club.id === id);
+                if (mockClub) return mockClub;
+            }
+            
+            const errorText = await response.text();
+            console.error(`Error en la respuesta: ${response.status} - ${errorText}`);
+            throw new Error(`Error al obtener club: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(`Error fetching club with id ${id}:`, error);
+        
+        // Para pruebas, devolver datos mock si está disponible
+        const mockClub = mockClubs.find(club => club.id === id);
+        return mockClub || null;
     }
 } 

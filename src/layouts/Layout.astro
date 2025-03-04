@@ -1,10 +1,18 @@
 ---
 import Footer from "../components/Footer.astro";
 import Navbar from "../components/Navbar.astro";
+import UserMenu from '../components/layout/UserMenu';
+
+// Verificar si hay usuario autenticado
+const userEmail = Astro.cookies.get('userEmail')?.value;
+const userName = Astro.cookies.get('userName')?.value;
+const userPicture = Astro.cookies.get('userPicture')?.value;
+
+const title = Astro.props.title || "UNAL App";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -15,16 +23,21 @@ import Navbar from "../components/Navbar.astro";
     />
 
     <meta name="generator" content={Astro.generator} />
-    <title>Astro Basics</title>
+    <title>{title}</title>
   </head>
   <body class="bg-white dark:bg-gray-900 h-screen">
     <script
       src="https://cdn.jsdelivr.net/npm/flowbite@3.0.0/dist/flowbite.min.js"
     ></script>
-	<Navbar/>
+    
+    <div class="w-full flex justify-end px-4 py-2 bg-gray-100 dark:bg-gray-800">
+      <UserMenu client:load userEmail={userEmail} userName={userName} userPicture={userPicture} />
+    </div>
+    
+    <Navbar/>
 
     <slot />
-	<Footer/>
+    <Footer/>
   </body>
 </html>
 

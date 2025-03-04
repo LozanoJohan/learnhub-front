@@ -3,7 +3,7 @@ import RelatedCourses from '../../components/sia/RelatedCourses.astro';
 import AddReviewModal from '../../components/sia/reviews/AddReviewModal.astro';
 import Reviews from '../../components/sia/reviews/Reviews.astro';
 import ReviewsDisplay from '../../components/sia/reviews/ReviewsDisplay.astro';
-import { courses } from '../../data/siaCourses';
+import { getSiaCourses } from '../../services/siaService';
 import Layout from '../../layouts/Layout.astro';
 import type { SIACourse } from '../../models/courses';
 
@@ -14,16 +14,20 @@ interface Props {
 
 const { courseCode } = Astro.params;
 
-const course: SIACourse = courses.filter(
-  (course) => course.id === courseCode
-)[0];
+// Obtener el curso del mock en lugar de la base de datos
+const coursesData = await getSiaCourses();
+const course = coursesData.find((c) => c.id === courseCode);
 
-console.log(Astro.params);
+if (!course) {
+  return Astro.redirect('/404');
+}
+
+console.log("Curso encontrado:", course);
 ---
 
 <Layout>
   <main class="pt-8 lg:pt-16 bg-white dark:bg-gray-900 antialiased">
-    <div class="flex justify-between px-4 mx-auto max-w-screen-md">
+    <div class="flex justify-between px-4 mx-auto max-w-screen-xl">
       <article
         class="mx-auto w-full max-w-screen-xl format format-sm sm:format-base lg:format-lg format-blue dark:format-invert"
       >
@@ -35,21 +39,61 @@ console.log(Astro.params);
           </h1>
           <ReviewsDisplay />
           
-          <address class="flex items-center mb-6 not-italic">
+          <div class="flex items-center mb-6 not-italic">
             <div
               class="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white"
             >
               <div>
                 <p class="pt-2 font-semibold text-gray-900 dark:text-white">
-                  {course.id}
+                  Código: {course.id}
                 </p>
               </div>
             </div>
-          </address>
+          </div>
         </header>
-        <p class="lead">
-          {course.description}
-        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Descripción</h2>
+            <p class="lead mb-4">
+              {course.description}
+            </p>
+          </div>
+          
+          <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Información del curso</h2>
+            
+            <div class="mb-4">
+              <p class="text-lg font-medium text-gray-900 dark:text-white">Créditos: <span class="font-normal">{course.credits}</span></p>
+            </div>
+            
+            <div class="mb-4">
+              <p class="text-lg font-medium text-gray-900 dark:text-white">Dificultad: <span class="font-normal">{course.difficulty}</span></p>
+            </div>
+            
+            <div class="mb-4">
+              <p class="text-lg font-medium text-gray-900 dark:text-white">Calificación: <span class="font-normal">{course.score} ⭐</span></p>
+            </div>
+            
+            {course.type && (
+              <div class="mb-4">
+                <p class="text-lg font-medium text-gray-900 dark:text-white">Tipo: <span class="font-normal">{course.type}</span></p>
+              </div>
+            )}
+            
+            {course.places && (
+              <div class="mb-4">
+                <p class="text-lg font-medium text-gray-900 dark:text-white">Cupos disponibles: <span class="font-normal">{course.places}</span></p>
+              </div>
+            )}
+            
+            <div class="mt-6">
+              <a href={`https://sia.unal.edu.co/`} target="_blank" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                Ver en SIA
+              </a>
+            </div>
+          </div>
+        </div>
       </article>
     </div>
   </main>

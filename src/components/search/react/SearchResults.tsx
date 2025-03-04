@@ -4,12 +4,10 @@ import type { CourseraCourse, SIACourse } from '../../../models/courses';
 import type { Club } from '../../../models/clubs';
 import { getCourseraCourses } from '../../../services/courseraService';
 import { getClubs } from '../../../services/clubService';
-import { getSiaCourses } from '../../../services/siaService';
-import { getRelatedCourses } from '../../../services/vectorSearchService';
 import { searchCoursesByVector } from '../../../services/vectorSearchService';
 
 const SearchResults: React.FC = () => {
-  const { query, isSearchActive, showCoursera, isRealtime, siaCreditsFilter } = useSearchContext();
+  const { query, isSearchActive, showCoursera, siaCreditsFilter } = useSearchContext();
   const [courseraResults, setCourseraResults] = useState<CourseraCourse[]>([]);
   const [clubResults, setClubResults] = useState<Club[]>([]);
   const [siaResults, setSiaResults] = useState<SIACourse[]>([]);
@@ -18,62 +16,13 @@ const SearchResults: React.FC = () => {
   const [isLoadingSia, setIsLoadingSia] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<SIACourse | null>(null);
   const [relatedCourses, setRelatedCourses] = useState<SIACourse[]>([]);
-  const [useVectorSearch, setUseVectorSearch] = useState(false);
 
-  const safeDecode = (str: string) => {
-    try {
-      return decodeURIComponent(escape(str));
-    } catch (e) {
-      console.error('Error decodificando cadena:', e);
-      return str;
-    }
-  };
-
+  // useEffect para Coursera
   useEffect(() => {
-    if (!isSearchActive && !isRealtime) return;
-    
-    setIsLoadingSia(true);
-    setSiaResults([]);
-    setSelectedCourse(null);
-    setRelatedCourses([]);
-
-    const cleanQuery = safeDecode(query.trim());
-    if (!cleanQuery) {
-      setSiaResults([]);
-      setCourseraResults([]);
-      setClubResults([]);
-      setIsLoadingSia(false);
-      return;
-    }
-
-    // Búsqueda de SIA (vectorial o tradicional)
-    const fetchSIACourses = async () => {
-      try {
-        let results;
-        if (useVectorSearch) {
-          // Usar búsqueda vectorial
-          results = await searchCoursesByVector(cleanQuery);
-        } else {
-          // Usar búsqueda tradicional
-          results = await getSiaCourses(cleanQuery);
-        }
-        
-        // Filtrar por créditos si hay un filtro activo
-        if (siaCreditsFilter !== null) {
-          results = results.filter(course => course.credits === siaCreditsFilter);
-        }
-        
-        setSiaResults(results);
-      } catch (error) {
-        console.error('Error fetching SIA courses:', error);
-        setSiaResults([]);
-      }
-    };
-
     // Obtener cursos de Coursera
     setIsLoadingCoursera(true);
     setCourseraResults([]);
-    getCourseraCourses(cleanQuery)
+    getCourseraCourses(query)
       .then((data) => {
         const results = query === "" ? data.slice(0,6) : data;
         setCourseraResults(results);
@@ -84,10 +33,13 @@ const SearchResults: React.FC = () => {
         setCourseraResults([]);
         setIsLoadingCoursera(false);
       });
+  }, [query, isSearchActive, showCoursera]);
 
+  // useEffect para Clubs
+  useEffect(() => {
     // Obtener clubs/canales
     setIsLoadingClubs(true);
-    getClubs(cleanQuery)
+    getClubs(query)
       .then((data) => {
         const results = query === "" ? data.slice(0,6) : data;
         setClubResults(results);
@@ -98,65 +50,34 @@ const SearchResults: React.FC = () => {
         setClubResults([]);
         setIsLoadingClubs(false);
       });
+  }, [query, isSearchActive]);
 
-    Promise.all([
-      fetchSIACourses(),
-      showCoursera ? getCourseraCourses(cleanQuery).then(setCourseraResults) : Promise.resolve(),
-      getClubs(cleanQuery).then(setClubResults)
-    ]).finally(() => {
-      setIsLoadingSia(false);
-    });
-
-  }, [query, isSearchActive, showCoursera, isRealtime, siaCreditsFilter, useVectorSearch]);
-
-  // Función para mostrar cursos relacionados
-  const handleShowRelatedCourses = async (course: SIACourse) => {
-    try {
-      setSelectedCourse(course);
-      setIsLoadingSia(true);
-      
-      // Obtener cursos relacionados por su código
-      const related = await getRelatedCourses(course.code || course.id);
-      setRelatedCourses(related);
-    } catch (error) {
-      console.error('Error fetching related courses:', error);
-      setRelatedCourses([]);
-    } finally {
-      setIsLoadingSia(false);
-    }
-  };
-
-  // Sección para mostrar la cabecera con estadísticas y opciones
-  const renderSearchHeader = () => {
-    const totalResults = siaResults.length + courseraResults.length + clubResults.length;
+  // useEffect para SIA usando siempre búsqueda vectorial
+  useEffect(() => {
+    // Obtener cursos del SIA
+    setIsLoadingSia(true);
+    setSiaResults([]);
+    setSelectedCourse(null);
+    setRelatedCourses([]);
     
-    return (
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg dark:bg-gray-800">
-        <div className="flex flex-wrap justify-between items-center mb-3">
-          <h2 className="text-lg font-semibold">
-            Resultados para: <span className="text-teal-600 dark:text-teal-400">"{query}"</span>
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {totalResults} resultados encontrados
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center">
-            <label className="mr-2 text-sm text-gray-700 dark:text-gray-300">Tipo de búsqueda:</label>
-            <select 
-              className="text-sm rounded border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-              value={useVectorSearch ? "vector" : "traditional"}
-              onChange={(e) => setUseVectorSearch(e.target.value === "vector")}
-            >
-              <option value="traditional">Tradicional (keywords)</option>
-              <option value="vector">Vectorial (semántica)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
+    // Siempre usar búsqueda vectorial
+    searchCoursesByVector(query)
+      .then((data) => {
+        let results = data;
+        if (siaCreditsFilter != null) {
+          results = results.filter((course: SIACourse) => course.credits === siaCreditsFilter);
+        } else if (query === "") {
+          results = results.slice(0,6);
+        }
+        setSiaResults(results);
+        setIsLoadingSia(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching SIA courses:', error);
+        setSiaResults([]);
+        setIsLoadingSia(false);
+      });
+  }, [query, isSearchActive, siaCreditsFilter]);
 
   // Renderizar los resultados de clubs
   const renderClubResults = () => {
@@ -185,26 +106,27 @@ const SearchResults: React.FC = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {clubResults.map((club: Club) => (
-          <div key={club.id} className="max-w-lg bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-            <a href={`/clubs/${club.id}`}>
-              <div className="p-5">
-                <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white line-clamp-2">
-                  {club.nombre}
-                </h5>
-                <p className="mb-3 text-sm font-normal text-gray-700 dark:text-gray-400 line-clamp-3">
-                  {club.descripcion}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-blue-200 dark:text-blue-800">
-                    {club.area}
-                  </span>
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-blue-200 dark:text-blue-800">
-                    {club.currentSize}/{club.capacity} miembros
-                  </span>
-                </div>
+          <a 
+            key={club.id} 
+            href={`/club/${club.id}`}
+            className="max-w-lg bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <img className="rounded-t-lg w-full h-48 object-cover" src={"https://via.placeholder.com/400x200"} alt={club.nombre} />
+            <div className="p-5">
+              <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">{club.nombre}</h5>
+              <p className="mb-3 text-sm font-normal text-gray-700 dark:text-gray-400 line-clamp-3">
+                {club.descripcion}
+              </p>
+              <div className="flex justify-between items-center mt-4">
+                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-blue-200 dark:text-blue-800">
+                  {club.area}
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {club.currentSize}/{club.capacity} miembros
+                </span>
               </div>
-            </a>
-          </div>
+            </div>
+          </a>
         ))}
       </div>
     );
@@ -212,90 +134,89 @@ const SearchResults: React.FC = () => {
 
   // Renderizar los resultados del SIA
   const renderSIAResults = () => {
-    if (siaResults.length === 0) return null;
+    if (isLoadingSia) {
+      return (
+        <div className="col-span-full text-center py-10">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Cargando cursos del SIA...</p>
+        </div>
+      );
+    }
+
+    if (siaResults.length === 0) {
+      return (
+        <div className="col-span-full text-center py-10">
+          <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
+            No se encontraron electivas en el SIA.
+          </p>
+          <p className="text-gray-500 dark:text-gray-400">
+            Intenta con otros términos de búsqueda o ajusta los filtros.
+          </p>
+        </div>
+      );
+    }
 
     return (
-      <div className="mb-8">
-        <h3 className="text-xl font-bold mb-4 text-teal-700 dark:text-teal-500">
-          Resultados SIA ({siaResults.length})
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {siaResults.map((course) => (
-            <div 
-              key={course.id} 
-              className={`p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow 
-                         ${selectedCourse?.id === course.id ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30' : 'border-gray-200 dark:border-gray-700'}`}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="text-lg font-semibold">{course.title}</h4>
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                    {course.credits} créditos
-                  </span>
-                  <span className={`px-2 py-1 text-xs rounded-full 
-                    ${course.difficulty === 'fácil' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 
-                    course.difficulty === 'medio' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' : 
-                    'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'}`}>
-                    {course.difficulty}
-                  </span>
-                </div>
-              </div>
-              
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+        {siaResults.map((course: SIACourse) => (
+          <a 
+            key={course.id} 
+            href={`/s/${course.id}`}
+            className="max-w-lg bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <div className="p-5">
+              <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white line-clamp-2">
+                {course.title}
+              </h5>
+              <p className="mb-3 text-sm font-normal text-gray-700 dark:text-gray-400 line-clamp-3">
                 {course.description}
               </p>
-              
-              {useVectorSearch && course.similarity_score && (
-                <div className="mb-3">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                    <div 
-                      className="bg-teal-600 dark:bg-teal-500 h-2.5 rounded-full" 
-                      style={{width: `${Math.round((course.similarity_score || 0) * 100)}%`}}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-right mt-1 text-gray-500 dark:text-gray-400">
-                    Relevancia: {Math.round((course.similarity_score || 0) * 100)}%
-                  </p>
-                </div>
-              )}
-              
-              <div className="flex justify-end">
-                <button
-                  onClick={() => handleShowRelatedCourses(course)}
-                  className="text-sm px-3 py-1 bg-teal-500 hover:bg-teal-600 text-white rounded transition"
-                >
-                  Ver cursos relacionados
-                </button>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-blue-200 dark:text-blue-800">
+                  {course.credits} créditos
+                </span>
+                {course.similarity_score !== undefined && (
+                  <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-green-200 dark:text-green-800">
+                    Relevancia: {Math.round((course.similarity_score) * 100)}%
+                  </span>
+                )}
+                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-blue-200 dark:text-blue-800">
+                  Dificultad: {course.difficulty}
+                </span>
+                {course.places && (
+                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-blue-200 dark:text-blue-800">
+                    {course.places} cupos
+                  </span>
+                )}
               </div>
+              
             </div>
-          ))}
-        </div>
+          </a>
+        ))}
       </div>
     );
   };
 
-  // Render para cursos relacionados
+  // Renderizar cursos relacionados
   const renderRelatedCourses = () => {
     if (!selectedCourse || relatedCourses.length === 0) return null;
 
     return (
-      <div className="mt-6 p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
         <h3 className="text-lg font-semibold mb-3">
           Cursos relacionados con "{selectedCourse.title}"
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {relatedCourses.map((course) => (
             <div 
               key={course.id} 
-              className="p-4 border rounded-lg border-gray-200 dark:border-gray-700 shadow-sm"
+              className="p-4 border rounded-lg border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-700"
             >
               <div className="flex justify-between items-start mb-2">
                 <h4 className="text-lg font-semibold">{course.title}</h4>
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                    {course.credits} créditos
-                  </span>
-                </div>
+                <span className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                  {course.credits} créditos
+                </span>
               </div>
               
               <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
@@ -315,6 +236,17 @@ const SearchResults: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+        <div className="mt-3 text-right">
+          <button
+            onClick={() => {
+              setSelectedCourse(null);
+              setRelatedCourses([]);
+            }}
+            className="text-sm px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded transition"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     );
@@ -337,10 +269,10 @@ const SearchResults: React.FC = () => {
       return (
         <div className="col-span-full text-center py-10">
           <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
-            No se encontraron cursos de Coursera.
+            No se encontraron cursos en Coursera.
           </p>
           <p className="text-gray-500 dark:text-gray-400">
-            Intenta con otros términos de búsqueda o ajusta los filtros.
+            Intenta con otros términos de búsqueda.
           </p>
         </div>
       );
@@ -349,80 +281,70 @@ const SearchResults: React.FC = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {courseraResults.map((course: CourseraCourse) => (
-          <div key={course.id} className="max-w-lg bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-            <a href={course.url} target="_blank" rel="noopener noreferrer">
-              <div className="p-5">
-                <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white line-clamp-2">
-                  {safeDecode(course.title)}
-                </h5>
-                <p className="mb-3 text-sm font-normal text-gray-700 dark:text-gray-400 line-clamp-3">
-                  {safeDecode(course.skills)}
-                </p>
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex items-center">
-                    <span className="text-yellow-400">★</span>
-                    <span className="ml-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      {course.score.toFixed(1)}
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {parseInt(course.reviews).toLocaleString('es-CO')} reseñas
-                  </span>
-                </div>
+          <a 
+            key={course.id} 
+            href={`/c/${course.id}`}
+            className="max-w-lg bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <div className="p-5">
+              <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white line-clamp-2">
+                {course.title}
+              </h5>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                Por {course.professor}
+              </p>
+              <p className="mb-3 text-sm font-normal text-gray-700 dark:text-gray-400 line-clamp-3">
+                {course.skills}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-yellow-200 dark:text-yellow-800">
+                  {course.score.toFixed(1)} ★
+                </span>
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-yellow-200 dark:text-yellow-800">
+                  {course.reviews} reseñas
+                </span>
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-yellow-200 dark:text-yellow-800">
+                  Dificultad: {course.difficulty}
+                </span>
               </div>
-            </a>
-          </div>
+            </div>
+          </a>
         ))}
       </div>
     );
   };
 
-  if (!isSearchActive && !isRealtime) {
-    return null;
-  }
-
   return (
-    <section className="py-6">
-      <div className="container mx-auto px-4">
-        {renderSearchHeader()}
-        
-        {isLoadingSia ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-pulse flex flex-col items-center">
-              <div className="h-12 w-12 bg-teal-500 rounded-full mb-4"></div>
-              <div className="h-4 w-32 bg-gray-300 dark:bg-gray-700 rounded mb-2"></div>
-              <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded"></div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {renderSIAResults()}
-            {renderRelatedCourses()}
-            {renderCourseraResults()}
-            {renderClubResults()}
+    <div>
+      <div className="bg-gray-50 dark:bg-gray-800">
+        {/* Sección de cursos del SIA */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white px-4 py-2">
+            Electivas del SIA 
+          </h2>
+          {renderSIAResults()}
+          {renderRelatedCourses()}
+        </div>
 
-            {siaResults.length === 0 && courseraResults.length === 0 && clubResults.length === 0 && query.trim() !== '' && (
-              <div className="text-center py-8">
-                <p className="text-lg text-gray-600 dark:text-gray-400">
-                  No se encontraron resultados para "{query}"
-                </p>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
-                  Intenta con otros términos o una búsqueda más amplia.
-                </p>
-                {!useVectorSearch && (
-                  <button
-                    onClick={() => setUseVectorSearch(true)}
-                    className="mt-4 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded transition"
-                  >
-                    Probar con búsqueda semántica
-                  </button>
-                )}
-              </div>
-            )}
-          </>
+        {/* Sección de cursos de Coursera */}
+        {showCoursera && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white px-4 py-2">
+              Cursos de Coursera
+            </h2>
+            {renderCourseraResults()}
+          </div>
         )}
+
+        {/* Sección de clubs */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white px-4 py-2">
+            Clubs y Grupos de Estudio
+          </h2>
+          {renderClubResults()}
+        </div>
       </div>
-    </section>
+    </div>
   );
 };
 

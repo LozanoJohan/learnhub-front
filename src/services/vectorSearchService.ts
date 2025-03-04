@@ -1,7 +1,7 @@
 import type { SIACourse, VectorSearchResult, RelatedCoursesResult } from "../models/courses";
 
-// URL de la API
-const API_BASE_URL = "/api"; // Usando URL relativa para que funcione con el proxy
+// URL de la API (cambiada a URL directa sin proxy)
+const API_BASE_URL = "http://localhost:8001"; // URL directa al backend
 
 /**
  * Realiza una búsqueda vectorial de cursos basada en la similitud semántica
