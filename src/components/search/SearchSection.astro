@@ -1,12 +1,5 @@
 ---
-import Searchbar from "./Searchbar.astro";
+import SearchSectionReact from './react/SearchSection';
 ---
 
-<section class="max-w-screen-xl mx-auto px-4 py-4 md:py-12 lg:py-24">
-  <h1
-    class="mb-5 text-xl sm:text-2xl sm:font-bold text-center leading-none tracking-tight text-gray-900 md:text-3xl lg:text-4xl dark:text-white"
-  >
-    Encontrar electivas nunca fue tan fácil
-  </h1>
-  <Searchbar/>
-</section>
+<SearchSectionReact client:load />

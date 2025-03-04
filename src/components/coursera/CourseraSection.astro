@@ -1,12 +1,15 @@
 ---
 import CourseraCard from "./CourseraCard.astro";
-import { courses } from "../../data/courseraCourses";
+import { getCourseraCourses } from "../../services/courseraService";
 
-
+// Obtén los cursos de Coursera (ahora se filtrarán a través del script)
+const courses = await getCourseraCourses();
+console.log("Cursos de Coursera:", courses);
 ---
 
 <section
   class="max-w-screen-xl mx-auto p-4"
+  id="coursera-results-container"
 >
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-center justify-center">
     {courses.map((course) => (

@@ -1,0 +1,19 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Chat from '../../components/Chat';
+import { onRequest } from '../../middleware/auth';
+
+export { onRequest };
+
+const { id } = Astro.params;
+const userEmail = Astro.cookies.get('userEmail')?.value || 'Usuario';
+---
+
+<Layout title="Chat del Club">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Chat del Club</h1>
+    <div class="max-w-4xl mx-auto">
+      <Chat client:load channelId={id} />
+    </div>
+  </main>
+</Layout> 

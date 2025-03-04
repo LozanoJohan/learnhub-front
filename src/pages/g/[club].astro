@@ -1,0 +1,161 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { clubsService } from '../../services/clubsService';
+import ChatComponent from '../../components/chat/ChatComponent.astro';
+
+// Obtener el parámetro de la URL
+const { club: clubId } = Astro.params;
+
+// Buscar el club en el servicio
+const club = clubsService.getById(clubId || '', 'id');
+
+// Si no se encuentra el club, redirigir a la página principal
+if (!club) {
+  return Astro.redirect('/');
+}
+
+// Organizar los eventos por fecha
+const upcomingEvents = club.events?.filter(event => new Date(event.date) >= new Date()) || [];
+const pastEvents = club.events?.filter(event => new Date(event.date) < new Date()) || [];
+
+// Ordenar eventos
+upcomingEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+pastEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+---
+<Layout title={`${club.title} - Grupo Estudiantil`}>
+  <main class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+    <!-- Header del grupo -->
+    <div class="bg-white shadow rounded-lg overflow-hidden dark:bg-gray-800 mb-8">
+      <div class="relative">
+        <!-- Banner -->
+        <div class="w-full h-48 bg-gradient-to-r from-blue-500 to-blue-700"></div>
+        
+        <!-- Logo y título superpuestos -->
+        <div class="absolute -bottom-16 left-8 flex items-end">
+          <img src={club.logo} alt={club.title} class="w-32 h-32 rounded-lg border-4 border-white dark:border-gray-800 bg-white">
+          <h1 class="ml-4 text-3xl font-bold text-white drop-shadow-lg">{club.title}</h1>
+        </div>
+      </div>
+      
+      <!-- Detalles del grupo -->
+      <div class="pt-20 pb-6 px-8">
+        <div class="flex flex-wrap gap-2 mb-4">
+          {club.tags.map(tag => (
+            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+              {tag}
+            </span>
+          ))}
+        </div>
+        
+        <p class="text-gray-700 dark:text-gray-300 mb-6">
+          {club.description}
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h2 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Información de Contacto</h2>
+            <ul class="space-y-2">
+              <li class="flex items-center text-gray-600 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>{club.email || 'No disponible'}</span>
+              </li>
+              <li class="flex items-center text-gray-600 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span>{club.contact}</span>
+              </li>
+              <li class="flex items-center text-gray-600 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>{club.location || 'Ubicación no especificada'}</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div>
+            <h2 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Reuniones</h2>
+            <p class="text-gray-600 dark:text-gray-400">
+              {club.meetingSchedule || 'Horario de reuniones no especificado'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sección de eventos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <!-- Próximos eventos -->
+      <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
+        <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Próximos Eventos</h2>
+        {upcomingEvents.length === 0 ? (
+          <p class="text-gray-600 dark:text-gray-400">No hay eventos programados próximamente.</p>
+        ) : (
+          <ul class="space-y-4">
+            {upcomingEvents.map(event => (
+              <li class="border-l-4 border-blue-500 pl-4 py-2">
+                <div class="flex justify-between">
+                  <h3 class="font-semibold text-gray-900 dark:text-white">{event.title}</h3>
+                  <span class="text-sm text-blue-600 dark:text-blue-400">
+                    {new Date(event.date).toLocaleDateString()}
+                  </span>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{event.description}</p>
+                <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">Lugar: {event.location}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      
+      <!-- Eventos pasados -->
+      <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
+        <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Eventos Pasados</h2>
+        {pastEvents.length === 0 ? (
+          <p class="text-gray-600 dark:text-gray-400">No hay eventos pasados registrados.</p>
+        ) : (
+          <ul class="space-y-4">
+            {pastEvents.slice(0, 5).map(event => (
+              <li class="border-l-4 border-gray-300 pl-4 py-2">
+                <div class="flex justify-between">
+                  <h3 class="font-semibold text-gray-900 dark:text-white">{event.title}</h3>
+                  <span class="text-sm text-gray-500 dark:text-gray-500">
+                    {new Date(event.date).toLocaleDateString()}
+                  </span>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{event.description}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+    
+    <!-- Sección de miembros -->
+    <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800 mb-8">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Miembros del Grupo</h2>
+      
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {club.members?.map(member => (
+          <div class="flex flex-col items-center">
+            <img src={member.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.name)} 
+                alt={member.name} 
+                class="w-16 h-16 rounded-full object-cover mb-2" />
+            <h3 class="font-medium text-gray-900 dark:text-white text-center">{member.name}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 text-center">{member.role}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+    
+    <!-- Sección de Chat -->
+    <div class="bg-white shadow rounded-lg p-6 dark:bg-gray-800">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Chat del Grupo</h2>
+      <ChatComponent clubId={club.id} />
+    </div>
+  </main>
+</Layout> 

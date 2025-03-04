@@ -9,15 +9,22 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/react": "^4.2.1",
     "@astrojs/tailwind": "^5.1.5",
     "@astrojs/vercel": "^8.0.5",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
     "astro": "^5.1.10",
+    "firebase": "^11.4.0",
     "flowbite-typography": "^1.0.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
     "eslint": "^9.19.0",
     "globals": "^15.14.0",
-    "typescript-eslint": "^8.22.0"
+    "typescript-eslint": "^8.22.0",
+    "vitest": "^3.0.7"
   }
 }

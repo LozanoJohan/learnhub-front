@@ -1,0 +1,104 @@
+<div class="bg-white p-4 mb-6 rounded-lg shadow dark:bg-gray-800">
+  <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">Filtros</h3>
+  
+  <!-- Filtro de dificultad -->
+  <div class="mb-4">
+    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dificultad</label>
+    <select id="difficulty-filter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      <option value="">Todas</option>
+      <option value="fácil">Fácil</option>
+      <option value="medio">Medio</option>
+      <option value="dificil">Difícil</option>
+    </select>
+  </div>
+  
+  <!-- Filtro de créditos -->
+  <div class="mb-4">
+    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Créditos</label>
+    <div class="flex gap-2">
+      <input type="number" id="min-credits" placeholder="Min" min="1" max="10" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      <input type="number" id="max-credits" placeholder="Max" min="1" max="10" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+    </div>
+  </div>
+  
+  <!-- Filtro de puntaje mínimo -->
+  <div class="mb-4">
+    <label for="min-score" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Puntaje mínimo</label>
+    <input type="range" id="min-score" min="1" max="5" step="0.5" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+      <span>1</span>
+      <span>2</span>
+      <span>3</span>
+      <span>4</span>
+      <span>5</span>
+    </div>
+  </div>
+  
+  <!-- Filtro de disponibilidad -->
+  <div class="flex items-center mb-4">
+    <input id="available-checkbox" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+    <label for="available-checkbox" class="ml-2 text-sm font-medium text-gray-900 dark:text-white">Solo cursos con cupos disponibles</label>
+  </div>
+  
+  <button type="button" id="apply-sia-filters" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Aplicar filtros</button>
+  <button type="button" id="reset-sia-filters" class="ml-2 py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Resetear</button>
+</div>
+
+<script>
+  import { searchContext } from '../../services/searchContext';
+  import { updateResults } from '../../scripts/search';
+  
+  // Inicializar los filtros cuando la página se carga
+  document.addEventListener('DOMContentLoaded', () => {
+    const applyButton = document.getElementById('apply-sia-filters');
+    const resetButton = document.getElementById('reset-sia-filters');
+    const difficultySelect = document.getElementById('difficulty-filter') as HTMLSelectElement;
+    const minCreditsInput = document.getElementById('min-credits') as HTMLInputElement;
+    const maxCreditsInput = document.getElementById('max-credits') as HTMLInputElement;
+    const minScoreInput = document.getElementById('min-score') as HTMLInputElement;
+    const availableCheckbox = document.getElementById('available-checkbox') as HTMLInputElement;
+    
+    if (applyButton) {
+      applyButton.addEventListener('click', () => {
+        // Construir objeto de filtros
+        const filters: any = {};
+        
+        // Filtro de dificultad
+        if (difficultySelect && difficultySelect.value) {
+          filters.difficulty = difficultySelect.value as "fácil" | "medio" | "dificil";
+        }
+        
+        // Filtro de créditos
+        if (minCreditsInput && minCreditsInput.value && maxCreditsInput && maxCreditsInput.value) {
+          filters.credits = [parseInt(minCreditsInput.value), parseInt(maxCreditsInput.value)];
+        }
+        
+        // Filtro de puntaje mínimo
+        if (minScoreInput && minScoreInput.value) {
+          filters.minScore = parseFloat(minScoreInput.value);
+        }
+        
+        // Aplicar filtros al contexto
+        searchContext.setState({ filters });
+        searchContext.search();
+        updateResults();
+      });
+    }
+    
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        // Resetear campos del formulario
+        if (difficultySelect) difficultySelect.value = '';
+        if (minCreditsInput) minCreditsInput.value = '';
+        if (maxCreditsInput) maxCreditsInput.value = '';
+        if (minScoreInput) minScoreInput.value = '1';
+        if (availableCheckbox) availableCheckbox.checked = false;
+        
+        // Resetear filtros en el contexto
+        searchContext.setState({ filters: {} });
+        searchContext.search();
+        updateResults();
+      });
+    }
+  });
+</script> 

@@ -1,8 +1,8 @@
 ---
-import { type CourseraCourse } from '../../models/courses';
+import { type CourseraCourse } from "../../models/courses";
 
 interface Props {
-  course: CourseraCourse
+  course: CourseraCourse;
 }
 
 const { course } = Astro.props;
@@ -18,16 +18,20 @@ const { course } = Astro.props;
     {course.title}
   </h5>
   <p class="font-normal text-gray-700 dark:text-gray-400 line-clamp-2">
-    {course.description}
+    Habilidades: {course.skills}
   </p>
   <p class="font-normal text-gray-700 dark:text-gray-400">
-    Autor: {course.author}
+    Reseñas: {course.reviews}
   </p>
   <div class="my-2">
     <span
       class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-sm dark:bg-blue-200 dark:text-blue-800"
       >{course.score} ⭐</span
     >
-    
+    <div
+      class="ml-2  text-blue-600 hover:underline dark:text-blue-500"
+    >
+      Ver en Coursera
+    </div>
   </div>
 </a>
